@@ -744,19 +744,29 @@ class Collection
     {
         $query = $this->buildQueryArgs("realtime", "subscribe");
         $payload = $this->kuzzle->addHeaders([
-            "body"     => $filters ? (object)$filters : new \stdClass(),
+            "body"     => !empty($filters) ? $filters : new \stdClass(),
             "volatile" => (object)$this->kuzzle->getVolatile(),
-            "jwt"      => $this->kuzzle->getJwtToken(),
             "scope"    => "all",
             "users"    => "all"
         ], $query);
+        if ($this->kuzzle->getJwtToken()) {
+            $payload = $this->kuzzle->addHeaders(["jwt" => $this->kuzzle->getJwtToken()], $payload);
+        }
 
         $client = new Client($this->kuzzle->getWsUrl());
+
         $client->send(json_encode($payload));
         while (true) {
             try {
                 $message = $client->receive();
-                $callback($message);
+
+                if ($response = json_decode($message, 1)) {
+                    if (isset($response['result']['_source'])) {
+                        $document = $response['result'];
+                        $callback(new Document($this, $document['_id'], $document['_source']));
+                    }
+                }
+
                 // Act on received message
                 // Break while loop to stop listening
             } catch (\WebSocket\ConnectionException $e) {
