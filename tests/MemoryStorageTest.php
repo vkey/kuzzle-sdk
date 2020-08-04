@@ -15,7 +15,7 @@ class MemoryStorageTest extends TestCase
     protected $memoryStorage;
     protected $options;
 
-    protected function SetUp() {
+    protected function SetUp(): void {
         $this->options = ['requestId' => uniqid()];
 
         $this->kuzzle = $this

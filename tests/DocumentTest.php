@@ -4,7 +4,7 @@ use Kuzzle\Document;
 use Kuzzle\Collection;
 use Kuzzle\Kuzzle;
 
-class DocumentTest extends \PHPUnit_Framework_TestCase
+class DocumentTest extends \PHPUnit\Framework\TestCase
 {
     function testDelete()
     {

@@ -4,7 +4,7 @@ use Kuzzle\Document;
 use Kuzzle\Collection;
 use Kuzzle\Util\SearchResult;
 
-class SearchResultTestTest extends \PHPUnit_Framework_TestCase
+class SearchResultTestTest extends \PHPUnit\Framework\TestCase
 {
     function testSearchResultMethods()
     {

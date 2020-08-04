@@ -5,7 +5,7 @@ use Kuzzle\Security\User;
 use Kuzzle\Security\Profile;
 use Kuzzle\Security\Security;
 
-class UserTest extends \PHPUnit_Framework_TestCase
+class UserTest extends \PHPUnit\Framework\TestCase
 {
     function testEmptyGetProfiles()
     {

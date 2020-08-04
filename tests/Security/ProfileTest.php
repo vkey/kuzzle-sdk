@@ -6,7 +6,7 @@ use Kuzzle\Security\Profile;
 use Kuzzle\Security\Role;
 use Kuzzle\Security\Security;
 
-class ProfileTest extends \PHPUnit_Framework_TestCase
+class ProfileTest extends \PHPUnit\Framework\TestCase
 {
     function testSave()
     {

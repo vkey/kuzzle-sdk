@@ -2,7 +2,7 @@
 use Kuzzle\Collection;
 use Kuzzle\Kuzzle;
 
-class DataCollectionTest extends \PHPUnit_Framework_TestCase
+class DataCollectionTest extends \PHPUnit\Framework\TestCase
 {
     function testSearch()
     {

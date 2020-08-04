@@ -4,7 +4,7 @@ use Kuzzle\Kuzzle;
 use Kuzzle\Security\Role;
 use Kuzzle\Security\Security;
 
-class RoleTest extends \PHPUnit_Framework_TestCase
+class RoleTest extends \PHPUnit\Framework\TestCase
 {
     function testSave()
     {

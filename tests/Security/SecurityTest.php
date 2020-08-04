@@ -3,7 +3,7 @@
 use Kuzzle\Kuzzle;
 use Kuzzle\Security\Security;
 
-class SecurityTest extends \PHPUnit_Framework_TestCase
+class SecurityTest extends \PHPUnit\Framework\TestCase
 {
     function testCreateProfile()
     {

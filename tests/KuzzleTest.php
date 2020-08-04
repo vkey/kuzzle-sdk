@@ -2,7 +2,7 @@
 
 use Kuzzle\Util\CurlRequest;
 
-class KuzzleTest extends \PHPUnit_Framework_TestCase
+class KuzzleTest extends \PHPUnit\Framework\TestCase
 {
     const FAKE_KUZZLE_HOST = '127.0.0.1';
     const FAKE_KUZZLE_URL = 'http://127.0.0.1:7512';
