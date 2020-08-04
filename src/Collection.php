@@ -348,8 +348,9 @@ class Collection
         );
 
         $content = $response['result']['_source'];
+        unset($content['_kuzzle_info']);
         $content['_version'] = $response['result']['_version'];
-        $meta = $response['result']['_meta'];
+        $meta = $response['result']['_source']['_kuzzle_info'];
 
         return new Document($this, $response['result']['_id'], $content, $meta);
     }
