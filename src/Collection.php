@@ -736,7 +736,7 @@ class Collection
     }
 
     /**
-     * Create a new document in Kuzzle.
+     * Subscribe to realtime events from Kuzzle
      *
      *
      */
@@ -766,7 +766,7 @@ class Collection
                         $callback(new Document($this, $document['_id'], $document['_source']));
                     }
                 }
-
+                # TODO: catch exceptions here
                 // Act on received message
                 // Break while loop to stop listening
             } catch (\WebSocket\ConnectionException $e) {
