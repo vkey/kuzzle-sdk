@@ -73,8 +73,8 @@ class Collection
         }, $response['result']['hits']);
 
 
-        if (array_key_exists('_scroll_id', $response['result'])) {
-            $options['scrollId'] = $response['result']['_scroll_id'];
+        if (array_key_exists('scrollId', $response['result'])) {
+            $options['scrollId'] = $response['result']['scrollId'];
         }
 
         return new SearchResult(

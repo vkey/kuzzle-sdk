@@ -900,7 +900,7 @@ class Kuzzle
      */
     public function getSdkVersion()
     {
-        return $this->sdkVersion;
+        return '';
     }
 
     /**

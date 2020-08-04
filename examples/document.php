@@ -7,7 +7,7 @@ $collection = 'mycollection';
 $index = 'myindex';
 
 // enabling auto refresh (avoiding sleep between add/deletion and search)
-$kuzzle->setAutoRefresh($index);
+//$kuzzle->setAutoRefresh($index);
 
 $collection = $kuzzle->collection($collection, $index);
 
@@ -19,7 +19,16 @@ try {
     print_r($deleteResult);
 } catch (ErrorException $e) {
     $kuzzle->createIndex($index);
-    $collection->create();
+    $collection->create([
+        "properties" => [
+            "foo"  => [
+                "type" => "keyword"
+            ],
+            "foo2" => [
+                "type" => "text"
+            ]
+        ]
+    ]);
 }
 
 // add a document
@@ -64,8 +73,7 @@ $filter = [
 ];
 $options = [
     'scroll' => '30s',
-    'from' => 0,
-    'size' => 1
+    'size'   => 1
 ];
 
 $searchResult = $collection->search($filter, $options);
