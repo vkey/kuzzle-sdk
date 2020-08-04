@@ -29,6 +29,16 @@ class Kuzzle
     protected $url;
 
     /**
+     * @var string url of kuzzle WebSocket server
+     */
+    protected $wsUrl;
+
+    /**
+     * @var string host of kuzzle server
+     */
+    protected $host;
+
+    /**
      * @var string port of kuzzle http server (default: 7512)
      */
     protected $port = 7512;
@@ -132,8 +142,11 @@ class Kuzzle
             $this->sslConnection = false;
         }
 
+        $this->host = $host;
         $proto = $this->sslConnection ? 'https' : 'http';
         $this->url = $proto . '://' . $host . ':' . $this->port;
+        $wsProto = $this->sslConnection ? 'wss' : 'ws';
+        $this->wsUrl = $wsProto . '://' . $host . ':' . $this->port;
         $this->loadRoutesDescription($this->routesDescriptionFile);
 
         $this->sdkVersion = json_decode(file_get_contents(__DIR__.'/../composer.json'))->version;
@@ -141,6 +154,29 @@ class Kuzzle
         return $this;
     }
 
+    /**
+     * @return string
+     */
+    public function getHost()
+    {
+        return $this->host;
+    }
+
+    /**
+     * @return string
+     */
+    public function getWsUrl()
+    {
+        return $this->wsUrl;
+    }
+
+    /**
+     * @return int|mixed|string
+     */
+    public function getPort()
+    {
+        return $this->port;
+    }
     /**
      * Adds a listener to a Kuzzle global event.
      * When an event is fired, listeners are called in the order of their insertion.

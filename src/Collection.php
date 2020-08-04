@@ -4,6 +4,7 @@ namespace Kuzzle;
 
 use Kuzzle\Util\SearchResult;
 use InvalidArgumentException;
+use WebSocket\Client;
 
 /**
  * Class Collection
@@ -34,9 +35,9 @@ class Collection
     /**
      * Collection constructor.
      *
-     * @param Kuzzle $kuzzle Kuzzle object
+     * @param Kuzzle $kuzzle     Kuzzle object
      * @param string $collection The name of the data collection you want to manipulate
-     * @param string $index Name of the index containing the data collection
+     * @param string $index      Name of the index containing the data collection
      */
     public function __construct(Kuzzle $kuzzle, $collection, $index)
     {
@@ -52,6 +53,7 @@ class Collection
      *
      * @param array $filters Filters in ElasticSearch Query DSL format
      * @param array $options Optional parameters
+     *
      * @return SearchResult
      */
     public function search(array $filters, array $options = [])
@@ -90,8 +92,9 @@ class Collection
      * Retrieves next result of a search with scroll query.
      *
      * @param string $scrollId
-     * @param array $options (optional) arguments
-     * @param array $filters (optional) original filters
+     * @param array  $options (optional) arguments
+     * @param array  $filters (optional) original filters
+     *
      * @return SearchResult
      * @throws \Exception
      */
@@ -160,6 +163,7 @@ class Collection
      *
      * @param array $mapping Optional collection mapping description
      * @param array $options Optional parameters
+     *
      * @return boolean
      */
     public function create(array $mapping = [], array $options = [])
@@ -181,8 +185,8 @@ class Collection
      * Create a new document in Kuzzle.
      *
      * @param array|Document $document either an instance of a KuzzleDocument object, or a document
-     * @param string $id document identifier
-     * @param array $options Optional parameters
+     * @param string         $id       document identifier
+     * @param array          $options  Optional parameters
      *
      * @return Document
      * @throws InvalidArgumentException
@@ -226,6 +230,7 @@ class Collection
      * Creates a new CollectionMapping object, using its constructor.
      *
      * @param array $mapping Optional mapping
+     *
      * @return CollectionMapping
      */
     public function collectionMapping(array $mapping = [])
@@ -237,7 +242,8 @@ class Collection
      * Delete either a stored document, or all stored documents matching search filters.
      *
      * @param array|string $filters Unique document identifier OR Filters in ElasticSearch Query DSL format
-     * @param array $options Optional parameters
+     * @param array        $options Optional parameters
+     *
      * @return integer|integer[]
      */
     public function deleteDocument($filters, array $options = [])
@@ -265,12 +271,13 @@ class Collection
      * Deletes the current specifications of this collection
      *
      * @param array $options Optional parameters
+     *
      * @return mixed
      */
     public function deleteSpecifications(array $options = [])
     {
         $data = [
-            'index' => $this->index,
+            'index'      => $this->index,
             'collection' => $this->collection,
         ];
 
@@ -286,9 +293,10 @@ class Collection
     /**
      * Creates a new KuzzleDocument object, using its constructor.
      *
-     * @param string $id Optional document unique ID
-     * @param array $content Optional document content
-     * @param array $meta Document metadata
+     * @param string $id      Optional document unique ID
+     * @param array  $content Optional document content
+     * @param array  $meta    Document metadata
+     *
      * @return Document the newly created Kuzzle\Document object
      */
     public function document($id = '', array $content = [], array $meta = [])
@@ -300,7 +308,8 @@ class Collection
      * Returns a boolean indicating whether or not a document with provided ID exists.
      *
      * @param string $documentId
-     * @param array $options
+     * @param array  $options
+     *
      * @return boolean
      */
     public function documentExists($documentId, array $options = [])
@@ -322,7 +331,8 @@ class Collection
      * Retrieves a single stored document using its unique document ID.
      *
      * @param string $documentId Unique document identifier
-     * @param array $options Optional parameters
+     * @param array  $options    Optional parameters
+     *
      * @return Document
      */
     public function fetchDocument($documentId, array $options = [])
@@ -348,6 +358,7 @@ class Collection
      * Retrieves the current mapping of this collection.
      *
      * @param array $options Optional parameters
+     *
      * @return CollectionMapping
      */
     public function getMapping(array $options = [])
@@ -359,12 +370,13 @@ class Collection
      * Retrieves the current specifications of this collection
      *
      * @param array $options Optional parameters
+     *
      * @return mixed
      */
     public function getSpecifications(array $options = [])
     {
         $data = [
-            'index' => $this->index,
+            'index'      => $this->index,
             'collection' => $this->collection
         ];
 
@@ -381,7 +393,8 @@ class Collection
      * Create the provided documents
      *
      * @param array $documents Array of documents to create
-     * @param array $options Optional parameters
+     * @param array $options   Optional parameters
+     *
      * @return mixed
      */
     public function mCreateDocument($documents, array $options = [])
@@ -409,7 +422,8 @@ class Collection
      * Create or replace the provided documents
      *
      * @param array $documents Array of documents to create or replace
-     * @param array $options Optional parameters
+     * @param array $options   Optional parameters
+     *
      * @return mixed
      */
     public function mCreateOrReplaceDocument($documents, array $options = [])
@@ -437,7 +451,8 @@ class Collection
      * Delete specific documents according to given IDs
      *
      * @param array $documentIds IDs of the documents to delete
-     * @param array $options Optional parameters
+     * @param array $options     Optional parameters
+     *
      * @return mixed
      */
     public function mDeleteDocument($documentIds, array $options = [])
@@ -461,7 +476,8 @@ class Collection
      * Get specific documents according to given IDs
      *
      * @param array $documentIds IDs of the documents to retrieve
-     * @param array $options Optional parameters
+     * @param array $options     Optional parameters
+     *
      * @return mixed
      */
     public function mGetDocument($documentIds, array $options = [])
@@ -485,7 +501,7 @@ class Collection
      * Replace the provided documents
      *
      * @param array $documents Array of documents to replace
-     * @param array $options Optional parameters
+     * @param array $options   Optional parameters
      */
     public function mReplaceDocument($documents, array $options = [])
     {
@@ -512,7 +528,7 @@ class Collection
      * Update the provided documents
      *
      * @param array $documents Array of documents to update
-     * @param array $options Optional parameters
+     * @param array $options   Optional parameters
      */
     public function mUpdateDocument($documents, array $options = [])
     {
@@ -539,7 +555,7 @@ class Collection
      * Create a new document in Kuzzle.
      *
      * @param array|Document $document either an instance of a KuzzleDocument object, or a document
-     * @param array $options Optional parameters
+     * @param array          $options  Optional parameters
      *
      * @return bool
      */
@@ -566,14 +582,15 @@ class Collection
      * Replace an existing document with a new one.
      *
      * @param string $documentId Unique document identifier
-     * @param array $content Content of the document to create
-     * @param array $options Optional parameters
+     * @param array  $content    Content of the document to create
+     * @param array  $options    Optional parameters
+     *
      * @return Document
      */
     public function replaceDocument($documentId, array $content, array $options = [])
     {
         $data = [
-            '_id' => $documentId,
+            '_id'  => $documentId,
             'body' => $content
         ];
 
@@ -594,7 +611,8 @@ class Collection
      * Scrolls through specifications using the provided scrollId
      *
      * @param string $scrollId
-     * @param array $options Optional parameters
+     * @param array  $options Optional parameters
+     *
      * @return mixed
      * @throws \Exception
      */
@@ -622,6 +640,7 @@ class Collection
      *
      * @param array $filters Optional filters in ElasticSearch Query DSL format
      * @param array $options Optional parameters
+     *
      * @return mixed
      */
     public function searchSpecifications(array $filters = [], array $options = [])
@@ -643,7 +662,8 @@ class Collection
      * This is a helper function returning itself, allowing to easily set headers while chaining calls.
      *
      * @param array $headers New content
-     * @param bool $replace true: replace the current content with the provided data, false: merge it
+     * @param bool  $replace true: replace the current content with the provided data, false: merge it
+     *
      * @return Collection
      */
     public function setHeaders(array $headers, $replace = false)
@@ -664,6 +684,7 @@ class Collection
      * removing all stored documents but keeping all associated mappings.
      *
      * @param array $options Optional parameters
+     *
      * @return array ids of deleted documents
      */
     public function truncate(array $options = [])
@@ -682,14 +703,15 @@ class Collection
      * Note that you cannot remove fields this way: missing fields will simply be left unchanged.
      *
      * @param string $documentId Unique document identifier
-     * @param array $content Content of the document to create
-     * @param array $options Optional parameters
+     * @param array  $content    Content of the document to create
+     * @param array  $options    Optional parameters
+     *
      * @return Document
      */
     public function updateDocument($documentId, array $content, array $options = [])
     {
         $data = [
-            '_id' => $documentId,
+            '_id'  => $documentId,
             'body' => $content
         ];
 
@@ -714,10 +736,41 @@ class Collection
     }
 
     /**
+     * Create a new document in Kuzzle.
+     *
+     *
+     */
+    public function subscribe(\Closure $callback, array $filters = [])
+    {
+        $query = $this->buildQueryArgs("realtime", "subscribe");
+        $payload = $this->kuzzle->addHeaders([
+            "body"     => $filters ? (object)$filters : new \stdClass(),
+            "volatile" => (object)$this->kuzzle->getVolatile(),
+            "jwt"      => $this->kuzzle->getJwtToken(),
+            "scope"    => "all",
+            "users"    => "all"
+        ], $query);
+
+        $client = new Client($this->kuzzle->getWsUrl());
+        $client->send(json_encode($payload));
+        while (true) {
+            try {
+                $message = $client->receive();
+                $callback($message);
+                // Act on received message
+                // Break while loop to stop listening
+            } catch (\WebSocket\ConnectionException $e) {
+                // Possibly log errors
+            }
+        }
+    }
+
+    /**
      * Updates the current specifications of this collection
      *
      * @param array $specifications Specifications content
-     * @param array $options Optional parameters
+     * @param array $options        Optional parameters
+     *
      * @return mixed
      */
     public function updateSpecifications($specifications, array $options = [])
@@ -743,7 +796,8 @@ class Collection
      * Validates the provided specifications
      *
      * @param array $specifications Specifications content
-     * @param array $options Optional parameters
+     * @param array $options        Optional parameters
+     *
      * @return bool
      */
     public function validateSpecifications($specifications, array $options = [])
@@ -792,6 +846,7 @@ class Collection
     /**
      * @param string $controller
      * @param string $action
+     *
      * @return array
      */
     public function buildQueryArgs($controller, $action)
