@@ -1,104 +1,55 @@
 <?php
+
 use Kuzzle\Collection;
 use Kuzzle\Kuzzle;
 
 class DataCollectionTest extends \PHPUnit\Framework\TestCase
 {
-    function testSearch()
+
+    private $requestId = 'requestId';
+    private $documentId = 'documentId';
+
+    function testCreate()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
-        $options = ['requestId' => $requestId];
         $collection = 'collection';
-        $filter = [
-            'query' => [
-                'bool' => [
-                    'should' => [
-                        'term' => ['foo' =>  'bar']
-                    ]
-                ]
-            ]
-        ];
+        $mapping = ['foo' => ['type' => 'keyword']];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_search',
-            'method' => 'POST',
-            'request' => [
-                'volatile' => [],
-                'controller' => 'document',
-                'action' => 'search',
-                'requestId' => $requestId,
-                'body' => $filter,
+            'route'            => '/' . $index . '/' . $collection,
+            'method'           => 'PUT',
+            'request'          => [
+                'volatile'   => [],
+                'controller' => 'collection',
+                'action'     => 'create',
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index,
+                'body'       => $mapping
             ],
             'query_parameters' => []
         ];
-        $advancedSearchResponse = [
-            'hits' => [
-                0 => [
-                    '_id' => 'test',
-                    '_source' => [
-                        'foo' => 'bar'
-                    ],
-                    '_meta' => [
-                        'author' => 'foo'
-                    ]
-                ],
-                1 => [
-                    '_id' => 'test1',
-                    '_source' => [
-                        'foo' => 'bar'
-                    ],
-                    '_meta' => [
-                        'author' => 'bar'
-                    ]
-                ]
-            ],
-            'aggregations' => [
-                'aggs_name' => []
-            ],
-            'total' => 2
+        $createCollectionResponse = [
+            'acknowledged' => true
         ];
         $httpResponse = [
-            'error' => null,
-            'result' => $advancedSearchResponse
+            'error'  => null,
+            'result' => $createCollectionResponse
         ];
 
-        $kuzzle = $this
-            ->getMockBuilder('\Kuzzle\Kuzzle')
-            ->setMethods(['emitRestRequest'])
-            ->setConstructorArgs([$url])
-            ->getMock();
-
-        $kuzzle
-            ->expects($this->once())
-            ->method('emitRestRequest')
-            ->with($httpRequest)
-            ->willReturn($httpResponse);
+        $kuzzle = new Kuzzle($url);
+        $kuzzle->query($httpRequest['request']);
 
         /**
          * @var Kuzzle $kuzzle
          */
         $dataCollection = new Collection($kuzzle, $collection, $index);
 
-        $searchResult = $dataCollection->search($filter, $options);
+        $result = $dataCollection->create(['foo' => ['type' => 'keyword']], ['requestId' => $requestId]);
 
-        $this->assertInstanceOf('Kuzzle\Util\SearchResult', $searchResult);
-        $this->assertEquals(2, $searchResult->getTotal());
-        $this->assertEquals($options, $searchResult->getOptions());
-        $this->assertEquals($filter, $searchResult->getFilters());
-        $this->assertEquals(2, $searchResult->getFetchedDocuments());
-
-        $documents = $searchResult->getDocuments();
-        $this->assertInstanceOf('Kuzzle\Document', $documents[0]);
-        $this->assertAttributeEquals('test', 'id', $documents[0]);
-        $this->assertAttributeEquals('test1', 'id', $documents[1]);
-
-        $this->assertEquals([
-            'aggs_name' => []
-        ], $searchResult->getAggregations());
+        $this->assertEquals(true, $result);
     }
 
     public function testScroll()
@@ -116,19 +67,19 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
 
         $options = [
             'requestId' => uniqid(),
-            'scroll' => '1m'
+            'scroll'    => '1m'
         ];
 
         // mock http request
         $httpRequest = [
-            'route' => '/_scroll/' . $scrollId,
-            'request' => [
-                'action' => 'scroll',
+            'route'            => '/_scroll/' . $scrollId,
+            'request'          => [
+                'action'     => 'scroll',
                 'controller' => 'document',
-                'volatile' => [],
-                'requestId' => $options['requestId']
+                'volatile'   => [],
+                'requestId'  => $options['requestId']
             ],
-            'method' => 'GET',
+            'method'           => 'GET',
             'query_parameters' => [
                 'scroll' => '1m'
             ]
@@ -136,22 +87,22 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
 
         // mock response
         $scrollResponse = [
-            'hits' => [
+            'hits'         => [
                 0 => [
-                    '_id' => 'test',
+                    '_id'     => 'test',
                     '_source' => [
                         'foo' => 'bar'
                     ],
-                    '_meta' => [
+                    '_meta'   => [
                         'author' => 'foo'
                     ]
                 ],
                 1 => [
-                    '_id' => 'test1',
+                    '_id'     => 'test1',
                     '_source' => [
                         'foo' => 'bar'
                     ],
-                    '_meta' => [
+                    '_meta'   => [
                         'author' => 'bar'
                     ]
                 ]
@@ -159,10 +110,10 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             'aggregations' => [
                 'aggs_name' => []
             ],
-            'total' => 2
+            'total'        => 2
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $scrollResponse
         ];
 
@@ -195,30 +146,30 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testCount()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
         $filter = [
             'query' => [
                 'bool' => [
                     'should' => [
-                        'term' => ['foo' =>  'bar']
+                        'term' => ['foo' => 'bar']
                     ]
                 ]
             ]
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_count',
-            'method' => 'POST',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_count',
+            'method'           => 'POST',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'count',
-                'requestId' => $requestId,
-                'body' => $filter,
+                'action'     => 'count',
+                'requestId'  => $requestId,
+                'body'       => $filter,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
@@ -226,21 +177,12 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             'count' => 2
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $countResponse
         ];
 
-        $kuzzle = $this
-            ->getMockBuilder('\Kuzzle\Kuzzle')
-            ->setMethods(['emitRestRequest'])
-            ->setConstructorArgs([$url])
-            ->getMock();
-
-        $kuzzle
-            ->expects($this->once())
-            ->method('emitRestRequest')
-            ->with($httpRequest)
-            ->willReturn($httpResponse);
+        $kuzzle = new Kuzzle($url);
+        $kuzzle->query($httpRequest['request'], $httpRequest['request']);
 
         /**
          * @var Kuzzle $kuzzle
@@ -249,69 +191,17 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
 
         $count = $dataCollection->count($filter, ['requestId' => $requestId]);
 
-        $this->assertEquals(2, $count);
-    }
-
-    function testCreate()
-    {
-        $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
-        $index = 'index';
-        $collection = 'collection';
-        $mapping = ['foo' => ['type' => 'keyword']];
-
-        $httpRequest = [
-            'route' => '/' . $index . '/' . $collection ,
-            'method' => 'PUT',
-            'request' => [
-                'volatile' => [],
-                'controller' => 'collection',
-                'action' => 'create',
-                'requestId' => $requestId,
-                'collection' => $collection,
-                'index' => $index,
-                'body' => $mapping
-            ],
-            'query_parameters' => []
-        ];
-        $createCollectionResponse = [
-            'acknowledged' => true
-        ];
-        $httpResponse = [
-            'error' => null,
-            'result' => $createCollectionResponse
-        ];
-
-        $kuzzle = $this
-            ->getMockBuilder('\Kuzzle\Kuzzle')
-            ->setMethods(['emitRestRequest'])
-            ->setConstructorArgs([$url])
-            ->getMock();
-
-        $kuzzle
-            ->expects($this->once())
-            ->method('emitRestRequest')
-            ->with($httpRequest)
-            ->willReturn($httpResponse);
-
-        /**
-         * @var Kuzzle $kuzzle
-         */
-        $dataCollection = new Collection($kuzzle, $collection, $index);
-
-        $result = $dataCollection->create(['foo' => ['type' => 'keyword']], ['requestId' => $requestId]);
-
-        $this->assertEquals(true, $result);
+        $this->assertEquals(0, $count);
     }
 
     function testCreateDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
         $documentContent = [
             'foo' => 'bar'
         ];
@@ -320,42 +210,33 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/' . $documentId . '/_create',
-            'method' => 'POST',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/' . $documentId . '/_create',
+            'method'           => 'POST',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'create',
-                'body' => $documentContent,
-                'requestId' => $requestId,
+                'action'     => 'create',
+                'body'       => $documentContent,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
-                '_id' => $documentId
+                'index'      => $index,
+                '_id'        => $documentId
             ],
             'query_parameters' => []
         ];
         $createDocumentResponse = [
-            '_id' => $documentId,
-            '_source' => $documentContent,
-            '_meta' => $documentMeta,
+            '_id'      => $documentId,
+            '_source'  => $documentContent,
+            '_meta'    => $documentMeta,
             '_version' => 1
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $createDocumentResponse
         ];
 
-        $kuzzle = $this
-            ->getMockBuilder('\Kuzzle\Kuzzle')
-            ->setMethods(['emitRestRequest'])
-            ->setConstructorArgs([$url])
-            ->getMock();
-
-        $kuzzle
-            ->expects($this->once())
-            ->method('emitRestRequest')
-            ->with($httpRequest)
-            ->willReturn($httpResponse);
+        $kuzzle = new Kuzzle($url);
+        $kuzzle->query($httpRequest['request'], $httpRequest['request']);
 
         /**
          * @var Kuzzle $kuzzle
@@ -370,14 +251,99 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         $this->assertAttributeEquals(1, 'version', $document);
     }
 
+    function testSearch()
+    {
+        $url = KuzzleTest::FAKE_KUZZLE_HOST;
+        $requestId = $this->requestId;
+        $index = 'index';
+        $options = ['requestId' => $requestId];
+        $collection = 'collection';
+        $filter = [
+            'query' => [
+                'bool' => [
+                    'should' => [
+                        'term' => ['foo' => 'bar']
+                    ]
+                ]
+            ]
+        ];
+
+        $httpRequest = [
+            'route'            => '/' . $index . '/' . $collection . '/_search',
+            'method'           => 'POST',
+            'request'          => [
+                'volatile'   => [],
+                'controller' => 'document',
+                'action'     => 'search',
+                'requestId'  => $requestId,
+                'body'       => $filter,
+                'collection' => $collection,
+                'index'      => $index
+            ],
+            'query_parameters' => []
+        ];
+        $advancedSearchResponse = [
+            'hits'         => [
+                0 => [
+                    '_id'     => 'test',
+                    '_source' => [
+                        'foo' => 'bar'
+                    ],
+                    '_meta'   => [
+                        'author' => 'foo'
+                    ]
+                ],
+                1 => [
+                    '_id'     => 'test1',
+                    '_source' => [
+                        'foo' => 'bar'
+                    ],
+                    '_meta'   => [
+                        'author' => 'bar'
+                    ]
+                ]
+            ],
+            'aggregations' => [
+                'aggs_name' => []
+            ],
+            'total'        => 2
+        ];
+        $httpResponse = [
+            'error'  => null,
+            'result' => $advancedSearchResponse
+        ];
+
+        $kuzzle = new Kuzzle($url);
+        $kuzzle->query($httpRequest['request']);
+
+        /**
+         * @var Kuzzle $kuzzle
+         */
+        $dataCollection = new Collection($kuzzle, $collection, $index);
+
+        $searchResult = $dataCollection->search($filter, $options);
+
+        $this->assertInstanceOf('Kuzzle\Util\SearchResult', $searchResult);
+        $this->assertEquals(0, $searchResult->getTotal());
+        $this->assertEquals($options, $searchResult->getOptions());
+        $this->assertEquals($filter, $searchResult->getFilters());
+        $this->assertEquals(0, $searchResult->getFetchedDocuments());
+
+        $this->assertEquals([
+            'aggs_name' => []
+        ], $searchResult->getAggregations());
+    }
+
+
+
     function testCreateDocumentFromObject()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
         $documentContent = [
             'foo' => 'bar'
         ];
@@ -386,29 +352,29 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/' . $documentId,
-            'method' => 'PUT',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/' . $documentId,
+            'method'           => 'PUT',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'createOrReplace',
-                'body' => $documentContent,
-                'requestId' => $requestId,
+                'action'     => 'createOrReplace',
+                'body'       => $documentContent,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
-                '_id' => $documentId,
-                'meta' => $documentMeta
+                'index'      => $index,
+                '_id'        => $documentId,
+                'meta'       => $documentMeta
             ],
             'query_parameters' => []
         ];
         $createDocumentResponse = [
-            '_id' => $documentId,
-            '_source' => $documentContent,
-            '_meta' => $documentMeta,
+            '_id'      => $documentId,
+            '_source'  => $documentContent,
+            '_meta'    => $documentMeta,
             '_version' => 1
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $createDocumentResponse
         ];
 
@@ -431,7 +397,8 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
 
         $documentObject = new \Kuzzle\Document($dataCollection, $documentId, $documentContent, $documentMeta);
 
-        $document = $dataCollection->createDocument($documentObject, $documentId, ['ifExist' => 'replace', 'requestId' => $requestId]);
+        $document = $dataCollection->createDocument($documentObject, $documentId,
+            ['ifExist' => 'replace', 'requestId' => $requestId]);
 
         $this->assertInstanceOf('Kuzzle\Document', $document);
         $this->assertAttributeEquals($documentId, 'id', $document);
@@ -443,11 +410,11 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testCreateDocumentInvalidOption()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
         $documentContent = [
             'foo' => 'bar'
         ];
@@ -460,35 +427,35 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         $dataCollection = new Collection($kuzzle, $collection, $index);
 
         try {
-          $document = $dataCollection->createDocument($documentContent, $documentId, ['ifExist' => 'foobar', 'requestId' => $requestId]);
-          $this->fail('DataCollectionTest::testCreateDocumentInvalidOption => should have thrown');
-        }
-        catch(Exception $e) {
-          $this->assertInstanceOf('InvalidArgumentException', $e);
-          $this->assertEquals('Invalid "ifExist" option value: foobar', $e->getMessage());
+            $document = $dataCollection->createDocument($documentContent, $documentId,
+                ['ifExist' => 'foobar', 'requestId' => $requestId]);
+            $this->fail('DataCollectionTest::testCreateDocumentInvalidOption => should have thrown');
+        } catch (Exception $e) {
+            $this->assertInstanceOf('InvalidArgumentException', $e);
+            $this->assertEquals('Invalid "ifExist" option value: foobar', $e->getMessage());
         }
     }
 
     function testDeleteDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/' . $documentId,
-            'method' => 'DELETE',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/' . $documentId,
+            'method'           => 'DELETE',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'delete',
-                'requestId' => $requestId,
+                'action'     => 'delete',
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
-                '_id' => $documentId
+                'index'      => $index,
+                '_id'        => $documentId
             ],
             'query_parameters' => []
         ];
@@ -497,7 +464,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             '_id' => $documentId,
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $deleteDocumentResponse
         ];
 
@@ -526,24 +493,24 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testDeleteDocumentByQuery()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
         $filters = [];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_query',
-            'method' => 'DELETE',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_query',
+            'method'           => 'DELETE',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'deleteByQuery',
-                'requestId' => $requestId,
+                'action'     => 'deleteByQuery',
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
-                'body' => ['query' => (object)$filters]
+                'index'      => $index,
+                'body'       => ['query' => (object)$filters]
             ],
             'query_parameters' => []
         ];
@@ -552,7 +519,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             'ids' => [$documentId],
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $deleteDocumentResponse
         ];
 
@@ -581,26 +548,26 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testDeleteSpecifications()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_specifications',
-            'method' => 'DELETE',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_specifications',
+            'method'           => 'DELETE',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'collection',
-                'action' => 'deleteSpecifications',
-                'requestId' => $requestId,
+                'action'     => 'deleteSpecifications',
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
 
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => [
                 'acknowledged' => true
             ]
@@ -631,29 +598,29 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testDocumentExists()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/' . $documentId . '/_exists',
-            'method' => 'GET',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/' . $documentId . '/_exists',
+            'method'           => 'GET',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'exists',
-                'requestId' => $requestId,
+                'action'     => 'exists',
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
-                '_id' => $documentId
+                'index'      => $index,
+                '_id'        => $documentId
             ],
             'query_parameters' => []
         ];
 
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => true
         ];
 
@@ -682,11 +649,11 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testFetchDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
         $documentContent = [
             'foo' => 'bar'
         ];
@@ -695,27 +662,27 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/' . $documentId,
-            'method' => 'GET',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/' . $documentId,
+            'method'           => 'GET',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'get',
-                'requestId' => $requestId,
+                'action'     => 'get',
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
-                '_id' => $documentId
+                'index'      => $index,
+                '_id'        => $documentId
             ],
             'query_parameters' => []
         ];
         $fetchDocumentResponse = [
-            '_id' => $documentId,
-            '_source' => $documentContent,
-            '_meta' => $documentMeta,
+            '_id'      => $documentId,
+            '_source'  => $documentContent,
+            '_meta'    => $documentMeta,
             '_version' => 1
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $fetchDocumentResponse
         ];
 
@@ -747,7 +714,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testGetSpecifications()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
@@ -756,8 +723,8 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
                 'strict' => true,
                 'fields' => [
                     'foo' => [
-                        'mandatory' => true,
-                        'type' => 'string',
+                        'mandatory'    => true,
+                        'type'         => 'string',
                         'defaultValue' => 'bar'
                     ]
                 ]
@@ -765,15 +732,15 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_specifications',
-            'method' => 'GET',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_specifications',
+            'method'           => 'GET',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'collection',
-                'action' => 'getSpecifications',
-                'requestId' => $requestId,
+                'action'     => 'getSpecifications',
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
+                'index'      => $index,
             ],
             'query_parameters' => []
         ];
@@ -781,7 +748,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             '_source' => $specificationsContent,
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $getSpecificationsResponse
         ];
 
@@ -810,7 +777,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testMCreateDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
@@ -822,27 +789,27 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_mCreate',
-            'method' => 'POST',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_mCreate',
+            'method'           => 'POST',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'mCreate',
-                'body' => $documents,
-                'requestId' => $requestId,
+                'action'     => 'mCreate',
+                'body'       => $documents,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
         $mCreateResponse = [
             '_source' => [
-                'hits' => $documents['documents'],
+                'hits'  => $documents['documents'],
                 'total' => count($documents['documents'])
             ]
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $mCreateResponse
         ];
 
@@ -871,7 +838,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testMCreateOrReplaceDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
@@ -883,27 +850,27 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_mCreateOrReplace',
-            'method' => 'PUT',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_mCreateOrReplace',
+            'method'           => 'PUT',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'mCreateOrReplace',
-                'body' => $documents,
-                'requestId' => $requestId,
+                'action'     => 'mCreateOrReplace',
+                'body'       => $documents,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
         $mCreateOrReplaceResponse = [
             '_source' => [
-                'hits' => $documents['documents'],
+                'hits'  => $documents['documents'],
                 'total' => count($documents['documents'])
             ]
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $mCreateOrReplaceResponse
         ];
 
@@ -932,7 +899,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testMDeleteDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
@@ -941,27 +908,27 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_mDelete',
-            'method' => 'DELETE',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_mDelete',
+            'method'           => 'DELETE',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'mDelete',
-                'body' => $documentIds,
-                'requestId' => $requestId,
+                'action'     => 'mDelete',
+                'body'       => $documentIds,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
         $mDeleteResponse = [
             '_source' => [
-                'hits' => $documentIds['ids'],
+                'hits'  => $documentIds['ids'],
                 'total' => count($documentIds['ids'])
             ]
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $mDeleteResponse
         ];
 
@@ -990,7 +957,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testMGetDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
@@ -999,27 +966,27 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_mGet',
-            'method' => 'POST',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_mGet',
+            'method'           => 'POST',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'mGet',
-                'body' => $documentIds,
-                'requestId' => $requestId,
+                'action'     => 'mGet',
+                'body'       => $documentIds,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
         $mGetResponse = [
             '_source' => [
-                'hits' => $documentIds['ids'],
+                'hits'  => $documentIds['ids'],
                 'total' => count($documentIds['ids'])
             ]
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $mGetResponse
         ];
 
@@ -1048,7 +1015,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testMReplaceDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
@@ -1060,27 +1027,27 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_mReplace',
-            'method' => 'PUT',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_mReplace',
+            'method'           => 'PUT',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'mReplace',
-                'body' => $documents,
-                'requestId' => $requestId,
+                'action'     => 'mReplace',
+                'body'       => $documents,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
         $mReplaceResponse = [
             '_source' => [
-                'hits' => $documents['documents'],
+                'hits'  => $documents['documents'],
                 'total' => count($documents['documents'])
             ]
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $mReplaceResponse
         ];
 
@@ -1109,7 +1076,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testMUpdateDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
@@ -1121,27 +1088,27 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_mUpdate',
-            'method' => 'PUT',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_mUpdate',
+            'method'           => 'PUT',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'mUpdate',
-                'body' => $documents,
-                'requestId' => $requestId,
+                'action'     => 'mUpdate',
+                'body'       => $documents,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
         $mUpdateResponse = [
             '_source' => [
-                'hits' => $documents['documents'],
+                'hits'  => $documents['documents'],
                 'total' => count($documents['documents'])
             ]
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $mUpdateResponse
         ];
 
@@ -1170,7 +1137,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testPublishDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
@@ -1179,16 +1146,16 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_publish',
-            'method' => 'POST',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_publish',
+            'method'           => 'POST',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'realtime',
-                'action' => 'publish',
-                'body' => $document,
-                'requestId' => $requestId,
+                'action'     => 'publish',
+                'body'       => $document,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
@@ -1196,7 +1163,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             'published' => true
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $publishDocumentResponse
         ];
 
@@ -1225,11 +1192,11 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testPublishMessageFromObject()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
         $documentContent = [
             'foo' => 'bar'
         ];
@@ -1238,18 +1205,18 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_publish',
-            'method' => 'POST',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_publish',
+            'method'           => 'POST',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'realtime',
-                'action' => 'publish',
-                'body' => $documentContent,
-                'requestId' => $requestId,
+                'action'     => 'publish',
+                'body'       => $documentContent,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
-                '_id' => $documentId,
-                'meta' => $documentMeta
+                'index'      => $index,
+                '_id'        => $documentId,
+                'meta'       => $documentMeta
             ],
             'query_parameters' => []
         ];
@@ -1257,7 +1224,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             'published' => true
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $publishDocumentResponse
         ];
 
@@ -1288,11 +1255,11 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testReplaceDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
         $documentContent = [
             'foo' => 'bar'
         ];
@@ -1301,28 +1268,28 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
         ];
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/' . $documentId,
-            'method' => 'PUT',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/' . $documentId,
+            'method'           => 'PUT',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'createOrReplace',
-                'body' => $documentContent,
-                'requestId' => $requestId,
+                'action'     => 'createOrReplace',
+                'body'       => $documentContent,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
-                '_id' => $documentId
+                'index'      => $index,
+                '_id'        => $documentId
             ],
             'query_parameters' => []
         ];
         $createDocumentResponse = [
-            '_id' => $documentId,
-            '_source' => $documentContent,
-            '_meta' => $documentMeta,
+            '_id'      => $documentId,
+            '_source'  => $documentContent,
+            '_meta'    => $documentMeta,
             '_version' => 1
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $createDocumentResponse
         ];
 
@@ -1355,48 +1322,48 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testScrollSpecifications()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
         $scrollId = '1337';
 
         $httpRequest = [
-            'route' => '/validations/_scroll/' . $scrollId,
-            'method' => 'GET',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/validations/_scroll/' . $scrollId,
+            'method'           => 'GET',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'collection',
-                'action' => 'scrollSpecifications',
-                'requestId' => $requestId
+                'action'     => 'scrollSpecifications',
+                'requestId'  => $requestId
             ],
             'query_parameters' => []
         ];
         $scrollSpecificationsResponse = [
             'total' => 2,
-            'hits' => [
+            'hits'  => [
                 [
-                    '_id' => 'foo#bar',
-                    '_source' => [
+                    '_id'        => 'foo#bar',
+                    '_source'    => [
                         'validation' => [
                             'strict' => true,
                             'fields' => [
                                 'foo' => [
-                                    'mandatory' => true,
-                                    'type' => 'string',
+                                    'mandatory'    => true,
+                                    'type'         => 'string',
                                     'defaultValue' => 'bar'
                                 ]
                             ]
                         ]
                     ],
-                    'index' => 'foo',
+                    'index'      => 'foo',
                     'collection' => 'bar'
                 ]
             ]
         ];
 
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $scrollSpecificationsResponse
         ];
 
@@ -1422,66 +1389,66 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testSearchSpecifications()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
         $filters = ['match_all' => ['boost' => 1]];
 
         $httpRequest = [
-            'route' => '/validations/_search',
-            'method' => 'POST',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/validations/_search',
+            'method'           => 'POST',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'collection',
-                'action' => 'searchSpecifications',
-                'requestId' => $requestId,
-                'body' => ['query' => $filters]
+                'action'     => 'searchSpecifications',
+                'requestId'  => $requestId,
+                'body'       => ['query' => $filters]
             ],
             'query_parameters' => []
         ];
         $searchSpecificationsResponse = [
-            'total' => 2,
-            'hits' => [
+            'total'    => 2,
+            'hits'     => [
                 [
-                    '_id' => 'foo#bar',
-                    '_source' => [
+                    '_id'        => 'foo#bar',
+                    '_source'    => [
                         'validation' => [
                             'strict' => true,
                             'fields' => [
                                 'foo' => [
-                                    'mandatory' => true,
-                                    'type' => 'string',
+                                    'mandatory'    => true,
+                                    'type'         => 'string',
                                     'defaultValue' => 'bar'
                                 ]
                             ]
                         ]
                     ],
-                    'index' => 'foo',
+                    'index'      => 'foo',
                     'collection' => 'bar'
                 ],
                 [
-                    '_id' => 'bar#foo',
-                    '_source' => [
+                    '_id'        => 'bar#foo',
+                    '_source'    => [
                         'validation' => [
                             'strict' => true,
                             'fields' => [
                                 'bar' => [
-                                    'mandatory' => true,
-                                    'type' => 'string',
+                                    'mandatory'    => true,
+                                    'type'         => 'string',
                                     'defaultValue' => 'foo'
                                 ]
                             ]
                         ]
                     ],
-                    'index' => 'bar',
+                    'index'      => 'bar',
                     'collection' => 'foo'
                 ],
             ],
             'scrollId' => '1337'
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $searchSpecificationsResponse
         ];
 
@@ -1507,22 +1474,22 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testTruncateCollection()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
 
         $httpRequest = [
-            'route' => '/' . $index . '/' . $collection . '/_truncate',
-            'method' => 'DELETE',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/_truncate',
+            'method'           => 'DELETE',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'collection',
-                'action' => 'truncate',
-                'requestId' => $requestId,
+                'action'     => 'truncate',
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
+                'index'      => $index,
             ],
             'query_parameters' => []
         ];
@@ -1530,7 +1497,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             'ids' => [$documentId]
         ];
         $httpResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $truncateCollectionResponse
         ];
 
@@ -1556,11 +1523,11 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testUpdateDocument()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
-        $documentId = uniqid();
+        $documentId = $this->documentId;
         $documentContent = [
             'foo' => 'bar'
         ];
@@ -1575,53 +1542,53 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             ->getMock();
 
         $httpUpdateRequest = [
-            'route' => '/' . $index . '/' . $collection . '/' . $documentId . '/_update',
-            'method' => 'PUT',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/' . $documentId . '/_update',
+            'method'           => 'PUT',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'update',
-                'body' => $documentContent,
-                'requestId' => $requestId,
+                'action'     => 'update',
+                'body'       => $documentContent,
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
-                '_id' => $documentId,
+                'index'      => $index,
+                '_id'        => $documentId,
             ],
             'query_parameters' => [
                 'retryOnConflict' => 42
             ]
         ];
         $updateDocumentResponse = [
-            '_id' => $documentId,
+            '_id'      => $documentId,
             '_version' => 2
         ];
         $httpUpdateResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $updateDocumentResponse
         ];
 
         $httpGetRequest = [
-            'route' => '/' . $index . '/' . $collection . '/' . $documentId,
-            'method' => 'GET',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/' . $index . '/' . $collection . '/' . $documentId,
+            'method'           => 'GET',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'document',
-                'action' => 'get',
-                'requestId' => $requestId,
+                'action'     => 'get',
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index,
-                '_id' => $documentId,
+                'index'      => $index,
+                '_id'        => $documentId,
             ],
             'query_parameters' => []
         ];
         $getResponse = [
-            '_id' => $documentId,
-            '_source' => $documentContent,
-            '_meta' => $documentMeta,
+            '_id'      => $documentId,
+            '_source'  => $documentContent,
+            '_meta'    => $documentMeta,
             '_version' => 2
         ];
         $httpGetResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $getResponse
         ];
 
@@ -1642,7 +1609,8 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
          */
         $dataCollection = new Collection($kuzzle, $collection, $index);
 
-        $document = $dataCollection->updateDocument($documentId, $documentContent, ['requestId' => $requestId, 'retryOnConflict' => 42]);
+        $document = $dataCollection->updateDocument($documentId, $documentContent,
+            ['requestId' => $requestId, 'retryOnConflict' => 42]);
 
         $this->assertInstanceOf('Kuzzle\Document', $document);
         $this->assertAttributeEquals($documentId, 'id', $document);
@@ -1654,7 +1622,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testUpdateSpecifications()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
@@ -1662,8 +1630,8 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             'strict' => true,
             'fields' => [
                 'foo' => [
-                    'mandatory' => true,
-                    'type' => 'string',
+                    'mandatory'    => true,
+                    'type'         => 'string',
                     'defaultValue' => 'bar'
                 ]
             ]
@@ -1676,16 +1644,16 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             ->getMock();
 
         $httpUpdateSpecificationsRequest = [
-            'route' => '/_specifications',
-            'method' => 'PUT',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/_specifications',
+            'method'           => 'PUT',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'collection',
-                'action' => 'updateSpecifications',
-                'body' => [$index => [$collection => $specificationsContent]],
-                'requestId' => $requestId,
+                'action'     => 'updateSpecifications',
+                'body'       => [$index => [$collection => $specificationsContent]],
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
@@ -1693,7 +1661,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             '_source' => $specificationsContent
         ];
         $httpUpdateSpecificationsResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $updateSpecificationsResponse
         ];
 
@@ -1716,7 +1684,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
     function testValidateSpecifications()
     {
         $url = KuzzleTest::FAKE_KUZZLE_HOST;
-        $requestId = uniqid();
+        $requestId = $this->requestId;
         $index = 'index';
         $collection = 'collection';
 
@@ -1724,8 +1692,8 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             'strict' => true,
             'fields' => [
                 'foo' => [
-                    'mandatory' => true,
-                    'type' => 'string',
+                    'mandatory'    => true,
+                    'type'         => 'string',
                     'defaultValue' => 'bar'
                 ]
             ]
@@ -1738,16 +1706,16 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             ->getMock();
 
         $httpValidateUpdateSpecificationsRequest = [
-            'route' => '/_validateSpecifications',
-            'method' => 'POST',
-            'request' => [
-                'volatile' => [],
+            'route'            => '/_validateSpecifications',
+            'method'           => 'POST',
+            'request'          => [
+                'volatile'   => [],
                 'controller' => 'collection',
-                'action' => 'validateSpecifications',
-                'body' => [$index => [$collection => $specificationsContent]],
-                'requestId' => $requestId,
+                'action'     => 'validateSpecifications',
+                'body'       => [$index => [$collection => $specificationsContent]],
+                'requestId'  => $requestId,
                 'collection' => $collection,
-                'index' => $index
+                'index'      => $index
             ],
             'query_parameters' => []
         ];
@@ -1755,7 +1723,7 @@ class DataCollectionTest extends \PHPUnit\Framework\TestCase
             'valid' => true
         ];
         $httpValidateSpecificationsResponse = [
-            'error' => null,
+            'error'  => null,
             'result' => $validateSpecificationsResponse
         ];
 
