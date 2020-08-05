@@ -69,7 +69,9 @@ class Collection
         );
 
         $response['result']['hits'] = array_map(function ($document) {
-            return new Document($this, $document['_id'], $document['_source'], $document['_meta']);
+            $meta = $document['_source']['_kuzzle_info'];
+            unset($document['_source']['_kuzzle_info']);
+            return new Document($this, $document['_id'], $document['_source'], $meta);
         }, $response['result']['hits']);
 
 
@@ -115,7 +117,9 @@ class Collection
         );
 
         $response['result']['hits'] = array_map(function ($document) {
-            return new Document($this, $document['_id'], $document['_source'], $document['_meta']);
+            $meta = $document['_source']['_kuzzle_info'];
+            unset($document['_source']['_kuzzle_info']);
+            return new Document($this, $document['_id'], $document['_source'], $meta);
         }, $response['result']['hits']);
 
 
@@ -219,8 +223,10 @@ class Collection
             $options
         );
 
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+
         $content = $response['result']['_source'];
-        $meta = $response['result']['_meta'];
         $content['_version'] = $response['result']['_version'];
 
         return new Document($this, $response['result']['_id'], $content, $meta);
@@ -347,10 +353,11 @@ class Collection
             $options
         );
 
-        $content = $response['result']['_source'];
-        unset($content['_kuzzle_info']);
-        $content['_version'] = $response['result']['_version'];
         $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+
+        $content = $response['result']['_source'];
+        $content['_version'] = $response['result']['_version'];
 
         return new Document($this, $response['result']['_id'], $content, $meta);
     }
@@ -601,9 +608,11 @@ class Collection
             $options
         );
 
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+
         $content = $response['result']['_source'];
         $content['_version'] = $response['result']['_version'];
-        $meta = $response['result']['_meta'];
 
         return new Document($this, $response['result']['_id'], $content, $meta);
     }

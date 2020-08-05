@@ -147,9 +147,11 @@ class Document
             $options
         );
 
+        $documentMeta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+
         $documentContent = $response['result']['_source'];
         $documentContent['_version'] = $response['result']['_version'];
-        $documentMeta = $response['result']['_meta'];
 
         return new Document($this->collection, $response['result']['_id'], $documentContent, $documentMeta);
     }

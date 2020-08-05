@@ -75,7 +75,10 @@ class Security
             $options
         );
 
-        return new Profile($this, $response['result']['_id'], $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+
+        return new Profile($this, $response['result']['_id'], $response['result']['_source'], $meta);
     }
 
     /**
@@ -103,8 +106,9 @@ class Security
             $data,
             $options
         );
-
-        return new Role($this, $response['result']['_id'], $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+        return new Role($this, $response['result']['_id'], $response['result']['_source'], $meta);
     }
 
     /**
@@ -128,8 +132,9 @@ class Security
             $data,
             $options
         );
-
-        return new User($this, $response['result']['_id'], $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+        return new User($this, $response['result']['_id'], $response['result']['_source'], $meta);
     }
 
     /**
@@ -153,8 +158,9 @@ class Security
             $data,
             $options
         );
-
-        return new User($this, $response['result']['_id'], $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+        return new User($this, $response['result']['_id'], $response['result']['_source'], $meta);
     }
 
     /**
@@ -178,8 +184,9 @@ class Security
             $data,
             $options
         );
-
-        return new User($this, $response['result']['_id'], $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+        return new User($this, $response['result']['_id'], $response['result']['_source'], $meta);
     }
 
     /**
@@ -233,7 +240,9 @@ class Security
         );
 
         $response['result']['hits'] = array_map(function ($document) {
-            return new Profile($this, $document['_id'], $document['_source'], $document['_meta']);
+            $meta = $document['_source']['_kuzzle_info'];
+            unset($document['_source']['_kuzzle_info']);
+            return new Profile($this, $document['_id'], $document['_source'], $meta);
         }, $response['result']['hits']);
 
         return new ProfilesSearchResult(
@@ -316,7 +325,9 @@ class Security
         );
 
         $response['result']['hits'] = array_map(function ($document) {
-            return new User($this, $document['_id'], $document['_source'], $document['_meta']);
+            $meta = $document['_source']['_kuzzle_info'];
+            unset($document['_source']['_kuzzle_info']);
+            return new User($this, $document['_id'], $document['_source'], $meta);
         }, $response['result']['hits']);
 
         return new UsersSearchResult(
@@ -344,8 +355,9 @@ class Security
             $data,
             $options
         );
-
-        return new Profile($this, $response['result']['_id'], $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+        return new Profile($this, $response['result']['_id'], $response['result']['_source'], $meta);
     }
 
     /**
@@ -366,8 +378,9 @@ class Security
             $data,
             $options
         );
-
-        return new Role($this, $response['result']['_id'], $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+        return new Role($this, $response['result']['_id'], $response['result']['_source'], $meta);
     }
 
     /**
@@ -388,8 +401,9 @@ class Security
             $data,
             $options
         );
-
-        return new User($this, $response['result']['_id'], $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+        return new User($this, $response['result']['_id'], $response['result']['_source'], $meta);
     }
 
     /**
@@ -525,7 +539,9 @@ class Security
         );
 
         $response['result']['hits'] = array_map(function ($profile) {
-            return new Profile($this, $profile['_id'], $profile['_source'], $profile['_meta']);
+            $meta = $profile['_source']['_kuzzle_info'];
+            unset($profile['_source']['_kuzzle_info']);
+            return new Profile($this, $profile['_id'], $profile['_source'], $meta);
         }, $response['result']['hits']);
 
         if (isset($response['result']['scrollId'])) {
@@ -555,7 +571,9 @@ class Security
         );
 
         $response['result']['hits'] = array_map(function ($role) {
-            return new Role($this, $role['_id'], $role['_source'], $role['_meta']);
+            $meta = $role['_source']['_kuzzle_info'];
+            unset($role['_source']['_kuzzle_info']);
+            return new Role($this, $role['_id'], $role['_source'], $meta);
         }, $response['result']['hits']);
 
         return new RolesSearchResult($response['result']['total'], $response['result']['hits']);
@@ -583,7 +601,9 @@ class Security
         );
 
         $response['result']['hits'] = array_map(function ($user) {
-            return new User($this, $user['_id'], $user['_source'], $user['_meta']);
+            $meta = $user['_source']['_kuzzle_info'];
+            unset($user['_source']['_kuzzle_info']);
+            return new User($this, $user['_id'], $user['_source'], $meta);
         }, $response['result']['hits']);
 
         if (isset($response['result']['scrollId'])) {
@@ -613,8 +633,9 @@ class Security
             $data,
             $options
         );
-
-        return new Profile($this, $id, $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+        return new Profile($this, $id, $response['result']['_source'], $meta);
     }
 
     /**
@@ -637,8 +658,9 @@ class Security
             $data,
             $options
         );
-
-        return new Role($this, $id, $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+        return new Role($this, $id, $response['result']['_source'], $meta);
     }
 
     /**
@@ -661,8 +683,9 @@ class Security
             $data,
             $options
         );
-
-        return new User($this, $id, $response['result']['_source'], $response['result']['_meta']);
+        $meta = $response['result']['_source']['_kuzzle_info'];
+        unset($response['result']['_source']['_kuzzle_info']);
+        return new User($this, $id, $response['result']['_source'], $meta);
     }
 
     /**
