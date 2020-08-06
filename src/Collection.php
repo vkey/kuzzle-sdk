@@ -690,6 +690,24 @@ class Collection
     }
 
     /**
+     * Deletes a collection
+     *
+     * @param array $options Optional parameters
+     *
+     * @return bool is collection deleted
+     */
+    public function delete(array $options = [])
+    {
+        $response = $this->kuzzle->query(
+            $this->buildQueryArgs('collection', 'delete'),
+            $this->kuzzle->addHeaders([], $this->headers),
+            $options
+        );
+
+        return $response['error'] === null;
+    }
+
+    /**
      * Truncate the data collection,
      * removing all stored documents but keeping all associated mappings.
      *

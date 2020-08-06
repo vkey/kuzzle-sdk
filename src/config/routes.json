@@ -109,6 +109,11 @@
       "route": "/:index/:collection/_truncate",
       "method": "delete"
     },
+    "delete": {
+       "name": "delete",
+       "route": "/:index/:collection",
+       "method": "delete"
+    },
     "list": {
       "name": "list",
       "route": "/:index/_list/:type",

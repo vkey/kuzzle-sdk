@@ -117,3 +117,5 @@ while ($searchResult) {
     $searchResult = $searchResult->fetchNext();
 }
 print_r('search without scroll results total:' . $nbDocs . "\n");
+
+$collection->delete();
