@@ -214,9 +214,7 @@ class Document
         if ($replace) {
             $this->content = $content;
         } else {
-            foreach ($content as $key => $value) {
-                $this->content[$key] = $value;
-            }
+            $this->content = array_replace_recursive($this->content, $content);
         }
 
         return $this;
