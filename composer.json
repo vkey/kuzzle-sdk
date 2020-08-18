@@ -1,6 +1,6 @@
 {
-  "name": "kuzzleio/kuzzle-sdk",
-  "version": "3.0.7",
+  "name": "vkey/kuzzle-sdk",
+  "version": "4.0",
   "description": "Official PHP SDK for Kuzzle",
   "homepage": "http://kuzzle.io",
   "license": "Apache-2.0",
@@ -21,7 +21,7 @@
   },
   "require": {
     "php": "^7.2 || ^8",
-    "ramsey/uuid": "^4.1",
+    "ramsey/uuid": "^3.9",
     "ext-curl": "*",
     "textalk/websocket": "^1.3"
   },
