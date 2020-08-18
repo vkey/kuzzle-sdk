@@ -21,7 +21,7 @@
   },
   "require": {
     "php": "^7.2 || ^8",
-    "ramsey/uuid": "^3.9",
+    "ramsey/uuid": "^3.7|^4.0",
     "ext-curl": "*",
     "textalk/websocket": "^1.3"
   },
