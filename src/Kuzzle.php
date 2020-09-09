@@ -265,7 +265,7 @@ class Kuzzle
             $options
         );
 
-        return $response['result'];
+        return $response;
     }
 
     /**
