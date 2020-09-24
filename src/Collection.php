@@ -185,6 +185,23 @@ class Collection
         return $response['result']['acknowledged'];
     }
 
+    public function bulk($documents, array $options = [])
+    {
+        if (!is_array($documents)) {
+            throw new InvalidArgumentException('Collection.bulk: documents parameter format is invalid (should be an array of documents)');
+        }
+
+        $data = ['body' => ['bulkData' => $documents]];
+
+        $response = $this->kuzzle->query(
+            $this->buildQueryArgs('bulk', 'import'),
+            $this->kuzzle->addHeaders($data, $this->headers),
+            $options
+        );
+
+        return $response['result'];
+    }
+
     /**
      * Create a new document in Kuzzle.
      *
